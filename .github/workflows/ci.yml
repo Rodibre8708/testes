@@ -1,4 +1,4 @@
-name: Pipeline de CI - Testes do Grafo
+name: Pipeline CI/CD - Testes do Grafo
 
 on:
   push:
