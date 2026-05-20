@@ -1,7 +1,15 @@
+from collections import deque
+
 class Grafo:
     def __init__(self):
         # Guarda quem se conecta com quem
         self.adjacencias = {}
+
+    def _validar_vertice_existe(self, *vertices):
+        """Método privado (Helper) para reduzir duplicação de código na validação."""
+        for v in vertices:
+            if v not in self.adjacencias:
+                raise KeyError(f"Vértice inválido ou inexistente: {v}")
 
     def adicionar_vertice(self, vertice):
         if vertice in self.adjacencias:
@@ -9,9 +17,8 @@ class Grafo:
         self.adjacencias[vertice] = []
 
     def adicionar_aresta(self, origem, destino):
-        # Só cria a aresta se os dois nós já existirem no grafo
-        if origem not in self.adjacencias or destino not in self.adjacencias:
-            raise KeyError("Ambos os vértices precisam existir antes de criar uma aresta.")
+        # Substituiu os ifs repetidos pela nova função validadora (Prática DRY)
+        self._validar_vertice_existe(origem, destino)
         
         # Evita criar a mesma aresta duas vezes
         if destino in self.adjacencias[origem]:
@@ -19,26 +26,27 @@ class Grafo:
             
         self.adjacencias[origem].append(destino)
 
-    def existe_caminho(self, inicio, fim):
-        # Dá erro logo de cara se tentarem buscar um nó fantasma
-        if inicio not in self.adjacencias or fim not in self.adjacencias:
-            raise KeyError("Vértices de início ou fim são inválidos.")
-
+    def _busca_em_largura(self, inicio, fim):
+        """Lógica do algoritmo separada da validação para aumentar a coesão."""
         visitados = set()
-        # TODO: Mudar essa fila pra collections.deque depois. Usar pop(0) numa lista é O(N) e vai dar gargalo em grafos grandes.
-        fila = [inicio] 
+        # Refatoração crítica: troca de lista por deque para performance otimizada
+        fila = deque([inicio]) 
 
         while fila:
-            atual = fila.pop(0)
+            atual = fila.popleft()
             
             if atual == fim:
                 return True
                 
             visitados.add(atual)
             
-            # Coloca os vizinhos na fila pra continuar a busca (padrão BFS)
             for vizinho in self.adjacencias[atual]:
                 if vizinho not in visitados and vizinho not in fila:
                     fila.append(vizinho)
                     
         return False
+
+    def existe_caminho(self, inicio, fim):
+        # Código mais legível: Valida as entradas e depois delega a busca para o método especialista
+        self._validar_vertice_existe(inicio, fim)
+        return self._busca_em_largura(inicio, fim)
